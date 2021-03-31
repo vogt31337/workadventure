@@ -86,10 +86,10 @@ import {Subscription} from "rxjs";
 import {worldFullMessageStream} from "../../Connexion/WorldFullMessageStream";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
 import {TextUtils} from "../Components/TextUtils";
-import {LayersIterator} from "../Map/LayersIterator";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
 import {joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey} from "../Components/MobileJoystick";
+import {EmoteManager} from "./EmoteManager";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -184,6 +184,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     private messageSubscription: Subscription|null = null;
     private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string|undefined;
+    private emoteManager!: EmoteManager;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -221,6 +222,11 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.load.image(joystickBaseKey, joystickBaseImg);
             this.load.image(joystickThumbKey, joystickThumbImg);
         }
+        //todo: in an emote manager.
+        this.load.spritesheet('emote-music', 'resources/emotes/pipo-popupemotes005.png', {
+            frameHeight: 32,
+            frameWidth: 32,
+        });
         this.load.on(FILE_LOAD_ERROR, (file: {src: string}) => {
             // If we happen to be in HTTP and we are trying to load a URL in HTTPS only... (this happens only in dev environments)
             if (window.location.protocol === 'http:' && file.src === this.MapUrlFile && file.src.startsWith('http:') && this.originalMapUrl === undefined) {
@@ -498,6 +504,8 @@ export class GameScene extends ResizableScene implements CenterListener {
         if (!this.room.isDisconnected()) {
             this.connect();
         }
+        
+        this.emoteManager = new EmoteManager(this);
     }
 
     /**

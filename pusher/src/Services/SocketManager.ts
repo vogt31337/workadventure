@@ -22,7 +22,8 @@ import {
     WorldFullMessage,
     AdminPusherToBackMessage,
     ServerToAdminClientMessage,
-    UserJoinedRoomMessage, UserLeftRoomMessage, AdminMessage, BanMessage, RefreshRoomMessage
+    EmoteEventMessage,
+    UserJoinedRoomMessage, UserLeftRoomMessage, AdminMessage, BanMessage, RefreshRoomMessage, EmotePromptMessage
 } from "../Messages/generated/messages_pb";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
 import {JITSI_ISS, SECRET_JITSI_KEY} from "../Enum/EnvironmentVariable";
@@ -251,6 +252,15 @@ export class SocketManager implements ZoneEventListener {
 
         // Now, we need to listen to the correct viewport.
         this.handleViewport(client, viewport.toObject())
+    }
+
+
+
+    onEmote(emoteMessage: EmoteEventMessage, listener: ExSocketInterface): void {
+        const subMessage = new SubMessage();
+        subMessage.setEmoteeventmessage(emoteMessage);
+
+        emitInBatch(listener, subMessage);
     }
 
     // Useless now, will be useful again if we allow editing details in game
@@ -566,6 +576,13 @@ export class SocketManager implements ZoneEventListener {
         if (!room || !room.needsUpdate(versionNumber)) return;
         
         this.updateRoomWithAdminData(room);
+    }
+
+    handleEmotePromptMessage(client: ExSocketInterface, emoteEventmessage: EmotePromptMessage) {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setEmotepromptmessage(emoteEventmessage);
+
+        client.backConnection.write(pusherToBackMessage);
     }
 }
 
